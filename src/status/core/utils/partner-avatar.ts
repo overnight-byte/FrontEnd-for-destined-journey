@@ -6,7 +6,10 @@ let predefinedPartnerAvatarMapPromise: Promise<Record<string, string>> | null = 
 /**
  * 没有设定头像时，退而使用世界书立绘集（char_info.profiles）中第一张可用图片
  */
-const getChatPartnerGalleryFallbackUrl = (chatVariables: Record<string, any>, partner_name: string) => {
+const getChatPartnerGalleryFallbackUrl = (
+  chatVariables: Record<string, any>,
+  partner_name: string,
+) => {
   const gallery = _.get(chatVariables, ['char_info', 'profiles', partner_name, 'gallery']);
   if (!Array.isArray(gallery)) return '';
 
