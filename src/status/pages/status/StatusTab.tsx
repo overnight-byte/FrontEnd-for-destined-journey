@@ -565,9 +565,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   ) : (
                     <div className={styles.heroTitleRow}>
                       <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
-                      <span className={styles.heroTier}>
-                        {player.生命层级 || '未记录生命层级'}
-                      </span>
+                      <span className={styles.heroTier}>{player.生命层级 || '未记录生命层级'}</span>
                     </div>
                   )}
                 </div>
