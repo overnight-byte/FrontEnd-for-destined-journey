@@ -139,10 +139,10 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
     useDeleteConfirm();
   const destinyPoints = data.命运点数;
   const partners = data.关系列表;
-  // 天魔附身：被附身者在列表中标记为「附身中」
-  const possessedName = useMemo(() => {
+  // 天魔附身：被附身者在列表中标记为「附身中」（躯体已死者加 †）
+  const possessedMap = useMemo(() => {
     const tenma = getTenmaState(data.主角?.状态效果, partners);
-    return tenma?.mode === 'possess' ? tenma.targetName : '';
+    return _.fromPairs((tenma?.possessions ?? []).map(layer => [layer.name, layer.dead]));
   }, [data.主角?.状态效果, partners]);
   const partnerEntries = useMemo(() => Object.entries(partners ?? {}), [partners]);
   const partnerCategoryStorageKey = buildSessionKey('destiny', 'partner-category');
@@ -568,9 +568,12 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
         <div className={styles.partnerTags}>
           {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
-          {possessedName === partnerName && (
-            <span className={`${styles.tag} ${styles.tagPossessed}`} title="意识沉睡中">
-              附身中
+          {_.has(possessedMap, partnerName) && (
+            <span
+              className={`${styles.tag} ${styles.tagPossessed}`}
+              title={possessedMap[partnerName] ? '躯体已死，仅靠天魔诀维持' : '意识沉睡中'}
+            >
+              附身中{possessedMap[partnerName] ? ' †' : ''}
             </span>
           )}
           {partner.命定契约 && (
@@ -1240,9 +1243,12 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <div className={styles.partnerRowMeta}>
           <span className={styles.affectionBadge}>好感度 {partner.好感度 ?? 0}</span>
           {partner.在场 && <span className={`${styles.tag} ${styles.tagPresent}`}>在场</span>}
-          {possessedName === partnerName && (
-            <span className={`${styles.tag} ${styles.tagPossessed}`} title="意识沉睡中">
-              附身中
+          {_.has(possessedMap, partnerName) && (
+            <span
+              className={`${styles.tag} ${styles.tagPossessed}`}
+              title={possessedMap[partnerName] ? '躯体已死，仅靠天魔诀维持' : '意识沉睡中'}
+            >
+              附身中{possessedMap[partnerName] ? ' †' : ''}
             </span>
           )}
           {partner.命定契约 && (

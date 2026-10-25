@@ -544,6 +544,23 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
             <div className={styles.tenmaBreathFill} style={{ width: `${ratio * 100}%` }} />
           </div>
         )}
+        {tenma.possessions.length > 0 && (
+          <div className={styles.tenmaLayers} title="附身层（由内到外）">
+            <span className={styles.tenmaLayerSelf}>本源</span>
+            {tenma.possessions.map(layer => (
+              <span key={`${layer.layer}-${layer.name}`} className={styles.tenmaLayerItem}>
+                <span className={styles.tenmaLayerArrow}>›</span>
+                <span
+                  className={`${styles.tenmaLayerName} ${layer.dead ? styles.tenmaLayerDead : ''}`.trim()}
+                  title={layer.dead ? '躯体已死，仅靠天魔诀维持' : '意识沉睡中'}
+                >
+                  {layer.name}
+                  {layer.dead && ' †'}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
