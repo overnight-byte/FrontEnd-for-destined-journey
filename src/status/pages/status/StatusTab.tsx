@@ -14,6 +14,7 @@ import {
   readAvatarFileAsDataUrl,
   removeAvatarRecord,
   saveAvatarRecord,
+  TenmaModeLabel,
   TenmaTotalMinutes,
   TenmaWarningMinutes,
 } from '../../core/utils';
@@ -129,6 +130,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     [player.状态效果, data.关系列表],
   );
   const tenmaTargetName = tenma?.targetName ?? '';
+  const tenmaLabel = tenma ? TenmaModeLabel[tenma.mode] : '';
   const [tenmaAvatarUrl, setTenmaAvatarUrl] = useState<string>('');
 
   // 天魔化身：读取化身对象的头像（优先用户自定义，其次世界书登记/预设头像）
@@ -319,7 +321,9 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         <span className={`${styles.basicInfoValue} ${styles.tenmaInfoValue}`}>
           {targetDisplay}
           {targetDisplay !== selfDisplay && (
-            <span className={styles.tenmaInfoSelf}>本体：{selfDisplay}</span>
+            <span className={styles.tenmaInfoSelf}>
+              {tenma?.mode === 'possess' ? '灵魂' : '本体'}：{selfDisplay}
+            </span>
           )}
         </span>
       </div>
@@ -519,9 +523,10 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const renderTenmaBreath = () => {
     if (!tenma) return null;
 
+    const isPossess = tenma.mode === 'possess';
     const minutes = tenma.remainingMinutes;
     const ratio = minutes === null ? null : _.clamp(minutes / TenmaTotalMinutes, 0, 1);
-    const isWarning = minutes !== null && minutes <= TenmaWarningMinutes;
+    const isWarning = !isPossess && minutes !== null && minutes <= TenmaWarningMinutes;
 
     return (
       <div
@@ -529,10 +534,12 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         title={tenma.effectName}
       >
         <div className={styles.tenmaBreathHeader}>
-          <span className={styles.tenmaBreathLabel}>天魔之息</span>
-          <span className={styles.tenmaBreathTime}>{tenma.remainingText || '未知'}</span>
+          <span className={styles.tenmaBreathLabel}>{isPossess ? '天魔附身' : '天魔之息'}</span>
+          <span className={styles.tenmaBreathTime}>
+            {isPossess ? tenma.remainingText || '直至离开' : tenma.remainingText || '未知'}
+          </span>
         </div>
-        {ratio !== null && (
+        {!isPossess && ratio !== null && (
           <div className={styles.tenmaBreathTrack}>
             <div className={styles.tenmaBreathFill} style={{ width: `${ratio * 100}%` }} />
           </div>
@@ -553,7 +560,9 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   });
 
   return (
-    <div className={styles.statusTab}>
+    <div
+      className={`${styles.statusTab} ${tenma?.mode === 'possess' ? styles.tenmaModePossess : ''}`.trim()}
+    >
       <Card
         className={`${styles.statusTabCard} ${styles.overviewCard}`}
         bodyClassName={styles.overviewCardBody}
@@ -566,7 +575,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   <div className={styles.tenmaAvatarWrap}>
                     <AvatarPanel
                       src={tenmaAvatarUrl || playerAvatarDisplayUrl}
-                      alt={`天魔化身：${tenma.targetName}`}
+                      alt={`天魔${tenmaLabel}：${tenma.targetName}`}
                       size="lg"
                       className={`${styles.heroAvatar} ${styles.tenmaHeroAvatar}`}
                       onClick={() => setIsPlayerAvatarModalOpen(true)}
@@ -595,7 +604,9 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <div className={styles.heroIdentity}>
                   {tenma ? (
                     <div className={styles.heroTitleRow}>
-                      <span className={styles.tenmaName}>{tenma.targetName}</span>
+                      <span className={styles.tenmaName}>
+                        {tenmaLabel} · {tenma.targetName}
+                      </span>
                       <span className={`${styles.heroLevel} ${styles.tenmaLevel}`}>
                         Lv.{tenma.target?.等级 ?? player.等级 ?? 1}
                       </span>
@@ -603,7 +614,8 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                         {tenma.target?.生命层级 || player.生命层级 || '未记录生命层级'}
                       </span>
                       <span className={styles.tenmaTrueStats}>
-                        本体 Lv.{player.等级 ?? 1} · {player.生命层级 || '未记录生命层级'}
+                        {tenma.mode === 'possess' ? '灵魂' : '本体'} Lv.{player.等级 ?? 1} ·{' '}
+                        {player.生命层级 || '未记录生命层级'}
                       </span>
                     </div>
                   ) : (
@@ -627,7 +639,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                       style={getIconStyle('game-icons:spiked-halo')}
                     />
                     登神长阶
-                    {tenmaAscension && <span className={styles.tenmaAttrHint}>化身</span>}
+                    {tenmaAscension && <span className={styles.tenmaAttrHint}>{tenmaLabel}</span>}
                   </span>
                   <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
                 </div>
@@ -686,7 +698,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <span className={styles.sectionTitle}>
                   <span className={styles.sectionIcon} style={getIconStyle('game-icons:skills')} />
                   核心属性
-                  {tenmaAttributes && <span className={styles.tenmaAttrHint}>化身</span>}
+                  {tenmaAttributes && <span className={styles.tenmaAttrHint}>{tenmaLabel}</span>}
                 </span>
                 <div className={styles.attributePointPill}>
                   <span>自由属性点</span>
@@ -725,7 +737,10 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                       <span className={styles.attributeValueGroup}>
                         {tenmaAttributes ? (
                           <>
-                            <span className={styles.tenmaTrueAttr} title="本体数值">
+                            <span
+                              className={styles.tenmaTrueAttr}
+                              title={tenma?.mode === 'possess' ? '灵魂数值' : '本体数值'}
+                            >
                               {value ?? 0}
                             </span>
                             <span className={`${styles.attributeValue} ${styles.tenmaAttr}`}>

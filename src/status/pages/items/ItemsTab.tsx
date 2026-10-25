@@ -10,6 +10,7 @@ import {
   getQualityClass,
   getTenmaState,
   readSessionState,
+  TenmaModeLabel,
   writeSessionState,
 } from '../../core/utils';
 import type { ItemData } from '../../shared/components';
@@ -348,7 +349,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <>
             {borrowed && tenma && (
               <span className={styles.tenmaBorrowBadge} title={`借用自 ${tenma.targetName}`}>
-                借用
+                {tenma.mode === 'possess' ? '附身' : '借用'}
               </span>
             )}
             {getTitleSuffix(config, itemData)}
@@ -466,7 +467,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
                     className={`${styles.itemRowTag} ${styles.tenmaBorrowTag}`}
                     title={`借用自 ${tenma.targetName}`}
                   >
-                    借用·{tenma.targetName}
+                    {tenma.mode === 'possess' ? '附身' : '借用'}·{tenma.targetName}
                   </span>
                 )}
                 {itemTags.map((tag, idx) => (
@@ -589,7 +590,10 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   };
 
   return (
-    <div className={styles.itemsTab}>
+    <div
+      className={`${styles.itemsTab} ${tenma?.mode === 'possess' ? styles.tenmaModePossess : ''}`.trim()}
+      title={tenma ? `天魔${TenmaModeLabel[tenma.mode]}：${tenma.targetName}` : undefined}
+    >
       {/* 货币显示 */}
       <div className={styles.itemsTabHeader}>
         {/* 类别切换 */}

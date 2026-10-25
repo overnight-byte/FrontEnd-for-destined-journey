@@ -1,8 +1,8 @@
 /**
  * 幻世天魔诀 —— 天魔化身状态解析
  *
- * 当主角的状态效果中存在名为「天魔化身：X」的条目时，
- * 状态页以 X（关系列表中的角色）的外貌、等级与五维进行展示。
+ * 当主角的状态效果中存在名为「天魔化身：X」或「天魔附身：X」的条目时，
+ * 状态页以 X（关系列表中的角色）的外貌、等级、五维与持有物进行展示。
  */
 
 import type { StatData } from '../types';
@@ -13,12 +13,22 @@ export const TenmaTotalMinutes = 24 * 60;
 /** 进入危险提示的剩余时长（分钟） */
 export const TenmaWarningMinutes = 60;
 
-const TenmaEffectPattern = /^\s*天魔化身\s*[：:]\s*(.+?)\s*$/;
+const TenmaEffectPattern = /^\s*天魔(化身|附身)\s*[：:]\s*(.+?)\s*$/;
+
+/** transform = 限时化身；possess = 附身（无时限，直至主角离开） */
+export type TenmaMode = 'transform' | 'possess';
+
+export const TenmaModeLabel: Record<TenmaMode, string> = {
+  transform: '化身',
+  possess: '附身',
+};
 
 type PartnerMap = StatData['关系列表'];
 type Partner = PartnerMap[string];
 
 export interface TenmaState {
+  /** 化身或附身 */
+  mode: TenmaMode;
   /** 状态效果的完整名称 */
   effectName: string;
   /** 化身对象名称 */
@@ -64,22 +74,28 @@ export const getTenmaState = (
   statusEffects: Record<string, { 剩余时间?: string }> | undefined,
   partners: PartnerMap | undefined,
 ): TenmaState | null => {
-  const entry = _.find(Object.entries(statusEffects ?? {}), ([name]) =>
+  const entries = Object.entries(statusEffects ?? {}).filter(([name]) =>
     TenmaEffectPattern.test(name),
   );
+  // 附身优先于化身（附身成功后化身状态理应已移除，此处作保险）
+  const entry =
+    _.find(entries, ([name]) => name.match(TenmaEffectPattern)?.[1] === '附身') ?? entries[0];
   if (!entry) return null;
 
   const [effectName, effect] = entry;
-  const targetName = effectName.match(TenmaEffectPattern)?.[1] ?? '';
+  const match = effectName.match(TenmaEffectPattern);
+  const mode: TenmaMode = match?.[1] === '附身' ? 'possess' : 'transform';
+  const targetName = match?.[2] ?? '';
   if (!targetName) return null;
 
   const remainingText = _.trim(effect?.剩余时间 ?? '');
 
   return {
+    mode,
     effectName,
     targetName,
     target: partners?.[targetName],
     remainingText,
-    remainingMinutes: parseRemainingMinutes(remainingText),
+    remainingMinutes: mode === 'possess' ? null : parseRemainingMinutes(remainingText),
   };
 };

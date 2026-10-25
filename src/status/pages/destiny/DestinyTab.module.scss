@@ -1591,3 +1591,10 @@ $destiny-mobile-detail-height: clamp(600px, calc(56vh + 208px), 920px);
 .hiddenGroupBody {
   margin-top: 2px;
 }
+
+// 幻世天魔诀：被附身者
+.tagPossessed {
+  background: color-mix(in srgb, #a3243b 18%, transparent);
+  color: #a3243b;
+  font-weight: 700;
+}

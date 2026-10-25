@@ -592,17 +592,23 @@
 @include quality-colors;
 
 // ===== 幻世天魔诀：借用条目 =====
-$tenma-accent: #8e4fd6;
+.itemsTab {
+  --tenma-accent: #8e4fd6;
+}
+
+.tenmaModePossess {
+  --tenma-accent: #a3243b;
+}
 
 .tenmaBorrowedRow {
-  box-shadow: inset 3px 0 0 color-mix(in srgb, $tenma-accent 70%, transparent);
-  background: color-mix(in srgb, $tenma-accent 5%, transparent);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--tenma-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--tenma-accent) 5%, transparent);
 }
 
 .tenmaBorrowTag {
-  border-color: color-mix(in srgb, $tenma-accent 45%, transparent) !important;
-  color: color-mix(in srgb, $tenma-accent 80%, var(--theme-text-primary)) !important;
-  background: color-mix(in srgb, $tenma-accent 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--tenma-accent) 45%, transparent) !important;
+  color: color-mix(in srgb, var(--tenma-accent) 80%, var(--theme-text-primary)) !important;
+  background: color-mix(in srgb, var(--tenma-accent) 12%, transparent) !important;
   font-weight: 700;
 }
 
@@ -612,8 +618,8 @@ $tenma-accent: #8e4fd6;
   margin-right: 6px;
   padding: 1px 6px;
   border-radius: 999px;
-  color: color-mix(in srgb, $tenma-accent 80%, var(--theme-text-primary));
-  background: color-mix(in srgb, $tenma-accent 14%, transparent);
+  color: color-mix(in srgb, var(--tenma-accent) 80%, var(--theme-text-primary));
+  background: color-mix(in srgb, var(--tenma-accent) 14%, transparent);
   font-size: 11px;
   font-weight: 700;
 }

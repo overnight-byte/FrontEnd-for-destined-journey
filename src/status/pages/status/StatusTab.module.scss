@@ -600,9 +600,18 @@
 }
 
 // ===== 幻世天魔诀：天魔化身 =====
-$tenma-accent: #8e4fd6;
-$tenma-glow: #c38bff;
 $tenma-warning: #d24a4a;
+
+.statusTab {
+  --tenma-accent: #8e4fd6;
+  --tenma-glow: #c38bff;
+}
+
+// 附身：暗红
+.tenmaModePossess {
+  --tenma-accent: #a3243b;
+  --tenma-glow: #e0566f;
+}
 
 .tenmaAvatarWrap {
   position: relative;
@@ -610,10 +619,10 @@ $tenma-warning: #d24a4a;
 }
 
 .tenmaHeroAvatar {
-  border-color: color-mix(in srgb, $tenma-accent 70%, transparent);
+  border-color: color-mix(in srgb, var(--tenma-accent) 70%, transparent);
   box-shadow:
-    0 0 0 2px color-mix(in srgb, $tenma-accent 45%, transparent),
-    0 0 18px color-mix(in srgb, $tenma-glow 55%, transparent);
+    0 0 0 2px color-mix(in srgb, var(--tenma-accent) 45%, transparent),
+    0 0 18px color-mix(in srgb, var(--tenma-glow) 55%, transparent);
   animation: tenmaPulse 3.2s ease-in-out infinite;
 }
 
@@ -626,20 +635,20 @@ $tenma-warning: #d24a4a;
   border-radius: 999px;
   object-fit: cover;
   border: 2px solid var(--theme-window-bg);
-  box-shadow: 0 0 0 1px color-mix(in srgb, $tenma-accent 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tenma-accent) 60%, transparent);
   filter: grayscale(0.35);
   opacity: 0.92;
 }
 
 .tenmaName {
-  color: color-mix(in srgb, $tenma-accent 75%, var(--theme-text-primary));
+  color: color-mix(in srgb, var(--tenma-accent) 75%, var(--theme-text-primary));
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
 
 .tenmaLevel {
-  color: color-mix(in srgb, $tenma-accent 60%, var(--theme-text-primary));
+  color: color-mix(in srgb, var(--tenma-accent) 60%, var(--theme-text-primary));
 }
 
 .tenmaTrueStats {
@@ -654,9 +663,9 @@ $tenma-warning: #d24a4a;
   flex-direction: column;
   gap: 5px;
   padding: 7px 10px;
-  border: 1px solid color-mix(in srgb, $tenma-accent 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tenma-accent) 40%, transparent);
   border-radius: $border-radius-sm;
-  background: color-mix(in srgb, $tenma-accent 8%, transparent);
+  background: color-mix(in srgb, var(--tenma-accent) 8%, transparent);
 }
 
 .tenmaBreathHeader {
@@ -667,7 +676,7 @@ $tenma-warning: #d24a4a;
 }
 
 .tenmaBreathLabel {
-  color: color-mix(in srgb, $tenma-accent 75%, var(--theme-text-primary));
+  color: color-mix(in srgb, var(--tenma-accent) 75%, var(--theme-text-primary));
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -690,7 +699,7 @@ $tenma-warning: #d24a4a;
 .tenmaBreathFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, $tenma-accent, $tenma-glow);
+  background: linear-gradient(90deg, var(--tenma-accent), var(--tenma-glow));
   transition: width 0.4s ease;
 }
 
@@ -712,14 +721,14 @@ $tenma-warning: #d24a4a;
   margin-left: 6px;
   padding: 1px 6px;
   border-radius: 999px;
-  color: color-mix(in srgb, $tenma-accent 80%, var(--theme-text-primary));
-  background: color-mix(in srgb, $tenma-accent 14%, transparent);
+  color: color-mix(in srgb, var(--tenma-accent) 80%, var(--theme-text-primary));
+  background: color-mix(in srgb, var(--tenma-accent) 14%, transparent);
   font-size: 11px;
   font-weight: 700;
 }
 
 .tenmaAttr {
-  color: color-mix(in srgb, $tenma-accent 70%, var(--theme-text-primary));
+  color: color-mix(in srgb, var(--tenma-accent) 70%, var(--theme-text-primary));
 }
 
 .tenmaTrueAttr {
@@ -734,14 +743,14 @@ $tenma-warning: #d24a4a;
   0%,
   100% {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, $tenma-accent 45%, transparent),
-      0 0 12px color-mix(in srgb, $tenma-glow 40%, transparent);
+      0 0 0 2px color-mix(in srgb, var(--tenma-accent) 45%, transparent),
+      0 0 12px color-mix(in srgb, var(--tenma-glow) 40%, transparent);
   }
 
   50% {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, $tenma-accent 65%, transparent),
-      0 0 22px color-mix(in srgb, $tenma-glow 70%, transparent);
+      0 0 0 2px color-mix(in srgb, var(--tenma-accent) 65%, transparent),
+      0 0 22px color-mix(in srgb, var(--tenma-glow) 70%, transparent);
   }
 }
 
@@ -766,7 +775,7 @@ $tenma-warning: #d24a4a;
   display: inline-flex;
   flex-direction: column;
   gap: 2px;
-  color: color-mix(in srgb, $tenma-accent 65%, var(--theme-text-primary));
+  color: color-mix(in srgb, var(--tenma-accent) 65%, var(--theme-text-primary));
 }
 
 .tenmaInfoSelf {
@@ -777,5 +786,5 @@ $tenma-warning: #d24a4a;
 
 .tenmaResource {
   position: relative;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, $tenma-glow 35%, transparent));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tenma-glow) 35%, transparent));
 }
