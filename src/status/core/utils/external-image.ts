@@ -1,4 +1,11 @@
-const ExternalImageHostAllowList = ['files.catbox.moe', 'i.ibb.co', 'wsrv.nl'];
+const ExternalImageHostAllowList = [
+  'files.catbox.moe',
+  'i.ibb.co',
+  'wsrv.nl',
+  // 世界书 DLC 角色立绘常用图床
+  'img.mijiha.com',
+  'i.meee.com.tw',
+];
 const ExternalImageExtensionAllowList = ['.png', '.jpg', '.jpeg', '.webp', '.avif'];
 
 export interface ExternalImageEntry {

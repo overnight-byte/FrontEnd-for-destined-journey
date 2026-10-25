@@ -3,6 +3,24 @@ import { loadPredefinedData } from './predefined-data';
 
 let predefinedPartnerAvatarMapPromise: Promise<Record<string, string>> | null = null;
 
+/**
+ * 没有设定头像时，退而使用世界书立绘集（char_info.profiles）中第一张可用图片
+ */
+const getChatPartnerGalleryFallbackUrl = (chatVariables: Record<string, any>, partner_name: string) => {
+  const gallery = _.get(chatVariables, ['char_info', 'profiles', partner_name, 'gallery']);
+  if (!Array.isArray(gallery)) return '';
+
+  for (const image of gallery) {
+    const sources = _.get(image, 'sources');
+    if (!Array.isArray(sources)) continue;
+    for (const source of sources) {
+      const url = getAllowedExternalImageUrl(source);
+      if (url) return url;
+    }
+  }
+  return '';
+};
+
 const getChatPartnerAvatarUrl = (partner_name: string) => {
   try {
     const chatVariables = getVariables({ type: 'chat' });
@@ -14,7 +32,10 @@ const getChatPartnerAvatarUrl = (partner_name: string) => {
       'url',
     ]);
 
-    return getAllowedExternalImageUrl(avatarUrl);
+    return (
+      getAllowedExternalImageUrl(avatarUrl) ||
+      getChatPartnerGalleryFallbackUrl(chatVariables, partner_name)
+    );
   } catch (error) {
     console.warn('[PartnerAvatar] 读取聊天变量伙伴头像失败:', error);
     return '';
@@ -38,7 +59,9 @@ const getChatPartnerAvatarMap = (partner_names: string[]) => {
         partner_name,
         'url',
       ]);
-      const allowedAvatarUrl = getAllowedExternalImageUrl(avatarUrl);
+      const allowedAvatarUrl =
+        getAllowedExternalImageUrl(avatarUrl) ||
+        getChatPartnerGalleryFallbackUrl(chatVariables, partner_name);
 
       if (allowedAvatarUrl) {
         console.log('[PartnerAvatar] 命中 chat 伙伴头像:', partner_name, allowedAvatarUrl);
