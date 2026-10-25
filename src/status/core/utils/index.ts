@@ -7,3 +7,4 @@ export * from './partner-gallery';
 export * from './partner-gallery-storage';
 export * from './quality';
 export * from './session-storage';
+export * from './tenma';

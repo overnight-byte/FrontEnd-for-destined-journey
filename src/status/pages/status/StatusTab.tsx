@@ -7,11 +7,15 @@ import {
   getAvatarActionState,
   getAvatarRecord,
   getAvatarScopeKey,
+  getDefaultPartnerAvatarUrl,
   getIconifyMask,
+  getTenmaState,
   isAvatarRemovedRecord,
   readAvatarFileAsDataUrl,
   removeAvatarRecord,
   saveAvatarRecord,
+  TenmaTotalMinutes,
+  TenmaWarningMinutes,
 } from '../../core/utils';
 import {
   Ascension,
@@ -120,6 +124,45 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [isPlayerAvatarModalOpen, setIsPlayerAvatarModalOpen] = useState(false);
   const player = data.主角;
   const avatarScopeKey = useMemo(() => getAvatarScopeKey(), []);
+  const tenma = useMemo(
+    () => getTenmaState(player.状态效果, data.关系列表),
+    [player.状态效果, data.关系列表],
+  );
+  const tenmaTargetName = tenma?.targetName ?? '';
+  const [tenmaAvatarUrl, setTenmaAvatarUrl] = useState<string>('');
+
+  // 天魔化身：读取化身对象的头像（优先用户自定义，其次世界书登记/预设头像）
+  useEffect(() => {
+    let ignore = false;
+
+    if (!tenmaTargetName) {
+      setTenmaAvatarUrl('');
+      return;
+    }
+
+    const loadTenmaAvatar = async () => {
+      try {
+        const savedRecord = await getAvatarRecord(avatarScopeKey, 'partner', tenmaTargetName);
+        let url = '';
+        if (savedRecord && !isAvatarRemovedRecord(savedRecord)) {
+          url = savedRecord.value ?? '';
+        }
+        if (!url) {
+          url = await getDefaultPartnerAvatarUrl(tenmaTargetName);
+        }
+        if (!ignore) setTenmaAvatarUrl(url || '');
+      } catch (error) {
+        console.warn('[StatusTab] 读取天魔化身头像失败:', error);
+        if (!ignore) setTenmaAvatarUrl('');
+      }
+    };
+
+    void loadTenmaAvatar();
+
+    return () => {
+      ignore = true;
+    };
+  }, [avatarScopeKey, tenmaTargetName]);
 
   useEffect(() => {
     let ignore = false;
@@ -426,6 +469,34 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     ascensionPreviewItems.length - visibleAscensionPreviewItems.length,
     0,
   );
+  // 天魔化身期间，五维以化身对象为准（编辑模式下仍显示并编辑本体数值）
+  const tenmaAttributes = tenma?.target && !editEnabled ? tenma.target.属性 : null;
+
+  const renderTenmaBreath = () => {
+    if (!tenma) return null;
+
+    const minutes = tenma.remainingMinutes;
+    const ratio = minutes === null ? null : _.clamp(minutes / TenmaTotalMinutes, 0, 1);
+    const isWarning = minutes !== null && minutes <= TenmaWarningMinutes;
+
+    return (
+      <div
+        className={`${styles.tenmaBreath} ${isWarning ? styles.tenmaBreathWarning : ''}`.trim()}
+        title={tenma.effectName}
+      >
+        <div className={styles.tenmaBreathHeader}>
+          <span className={styles.tenmaBreathLabel}>天魔之息</span>
+          <span className={styles.tenmaBreathTime}>{tenma.remainingText || '未知'}</span>
+        </div>
+        {ratio !== null && (
+          <div className={styles.tenmaBreathTrack}>
+            <div className={styles.tenmaBreathFill} style={{ width: `${ratio * 100}%` }} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const playerAvatarDisplayUrl = isPlayerAvatarRemoved
     ? ''
     : playerAvatarUrl || playerDefaultAvatarUrl;
@@ -447,21 +518,61 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.leftColumn}>
             <section className={styles.corePanel}>
               <div className={styles.heroRow}>
-                <AvatarPanel
-                  src={playerAvatarDisplayUrl}
-                  alt="主角头像"
-                  size="lg"
-                  className={styles.heroAvatar}
-                  onClick={() => setIsPlayerAvatarModalOpen(true)}
-                  onImageError={handlePlayerAvatarImageError}
-                />
-                <div className={styles.heroIdentity}>
-                  <div className={styles.heroTitleRow}>
-                    <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
-                    <span className={styles.heroTier}>{player.生命层级 || '未记录生命层级'}</span>
+                {tenma ? (
+                  <div className={styles.tenmaAvatarWrap}>
+                    <AvatarPanel
+                      src={tenmaAvatarUrl || playerAvatarDisplayUrl}
+                      alt={`天魔化身：${tenma.targetName}`}
+                      size="lg"
+                      className={`${styles.heroAvatar} ${styles.tenmaHeroAvatar}`}
+                      onClick={() => setIsPlayerAvatarModalOpen(true)}
+                      onImageError={() => setTenmaAvatarUrl('')}
+                    />
+                    {tenmaAvatarUrl && playerAvatarDisplayUrl && (
+                      <img
+                        className={styles.tenmaTrueSelf}
+                        src={playerAvatarDisplayUrl}
+                        alt="本体"
+                        title="本体"
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
                   </div>
+                ) : (
+                  <AvatarPanel
+                    src={playerAvatarDisplayUrl}
+                    alt="主角头像"
+                    size="lg"
+                    className={styles.heroAvatar}
+                    onClick={() => setIsPlayerAvatarModalOpen(true)}
+                    onImageError={handlePlayerAvatarImageError}
+                  />
+                )}
+                <div className={styles.heroIdentity}>
+                  {tenma ? (
+                    <div className={styles.heroTitleRow}>
+                      <span className={styles.tenmaName}>{tenma.targetName}</span>
+                      <span className={`${styles.heroLevel} ${styles.tenmaLevel}`}>
+                        Lv.{tenma.target?.等级 ?? player.等级 ?? 1}
+                      </span>
+                      <span className={styles.heroTier}>
+                        {tenma.target?.生命层级 || player.生命层级 || '未记录生命层级'}
+                      </span>
+                      <span className={styles.tenmaTrueStats}>
+                        本体 Lv.{player.等级 ?? 1} · {player.生命层级 || '未记录生命层级'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className={styles.heroTitleRow}>
+                      <span className={styles.heroLevel}>Lv.{player.等级 ?? 1}</span>
+                      <span className={styles.heroTier}>
+                        {player.生命层级 || '未记录生命层级'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+              {tenma && renderTenmaBreath()}
               <button
                 className={styles.ascensionPreview}
                 onClick={() => setActiveDetail('ascension')}
@@ -524,6 +635,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <span className={styles.sectionTitle}>
                   <span className={styles.sectionIcon} style={getIconStyle('game-icons:skills')} />
                   核心属性
+                  {tenmaAttributes && <span className={styles.tenmaAttrHint}>化身</span>}
                 </span>
                 <div className={styles.attributePointPill}>
                   <span>自由属性点</span>
@@ -560,8 +672,19 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                       />
                     ) : (
                       <span className={styles.attributeValueGroup}>
-                        <span className={styles.attributeValue}>{value ?? 0}</span>
-                        {(player.属性点 ?? 0) >= 1 && (value ?? 0) <= 19 && (
+                        {tenmaAttributes ? (
+                          <>
+                            <span className={styles.tenmaTrueAttr} title="本体数值">
+                              {value ?? 0}
+                            </span>
+                            <span className={`${styles.attributeValue} ${styles.tenmaAttr}`}>
+                              {_.get(tenmaAttributes, key, value ?? 0)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className={styles.attributeValue}>{value ?? 0}</span>
+                        )}
+                        {!tenmaAttributes && (player.属性点 ?? 0) >= 1 && (value ?? 0) <= 19 && (
                           <button
                             type="button"
                             className={styles.attributePlusBtn}

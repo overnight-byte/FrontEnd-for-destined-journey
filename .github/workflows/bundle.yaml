@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - tenma
     paths-ignore:
       - dist/**
   workflow_dispatch:
@@ -18,7 +19,6 @@ concurrency:
 
 jobs:
   bundle:
-    if: github.repository == 'The-poem-of-destiny/FrontEnd-for-destined-journey'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

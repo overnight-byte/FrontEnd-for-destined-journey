@@ -598,3 +598,166 @@
     gap: 4px;
   }
 }
+
+// ===== 幻世天魔诀：天魔化身 =====
+$tenma-accent: #8e4fd6;
+$tenma-glow: #c38bff;
+$tenma-warning: #d24a4a;
+
+.tenmaAvatarWrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.tenmaHeroAvatar {
+  border-color: color-mix(in srgb, $tenma-accent 70%, transparent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, $tenma-accent 45%, transparent),
+    0 0 18px color-mix(in srgb, $tenma-glow 55%, transparent);
+  animation: tenmaPulse 3.2s ease-in-out infinite;
+}
+
+.tenmaTrueSelf {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--theme-window-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, $tenma-accent 60%, transparent);
+  filter: grayscale(0.35);
+  opacity: 0.92;
+}
+
+.tenmaName {
+  color: color-mix(in srgb, $tenma-accent 75%, var(--theme-text-primary));
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.tenmaLevel {
+  color: color-mix(in srgb, $tenma-accent 60%, var(--theme-text-primary));
+}
+
+.tenmaTrueStats {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.tenmaBreath {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, $tenma-accent 40%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, $tenma-accent 8%, transparent);
+}
+
+.tenmaBreathHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tenmaBreathLabel {
+  color: color-mix(in srgb, $tenma-accent 75%, var(--theme-text-primary));
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.tenmaBreathTime {
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tenmaBreathTrack {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--theme-text-muted) 22%, transparent);
+}
+
+.tenmaBreathFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, $tenma-accent, $tenma-glow);
+  transition: width 0.4s ease;
+}
+
+.tenmaBreathWarning {
+  border-color: color-mix(in srgb, $tenma-warning 55%, transparent);
+  background: color-mix(in srgb, $tenma-warning 8%, transparent);
+
+  .tenmaBreathLabel {
+    color: $tenma-warning;
+  }
+
+  .tenmaBreathFill {
+    background: $tenma-warning;
+    animation: tenmaFlicker 1.2s steps(2, jump-none) infinite;
+  }
+}
+
+.tenmaAttrHint {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: color-mix(in srgb, $tenma-accent 80%, var(--theme-text-primary));
+  background: color-mix(in srgb, $tenma-accent 14%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tenmaAttr {
+  color: color-mix(in srgb, $tenma-accent 70%, var(--theme-text-primary));
+}
+
+.tenmaTrueAttr {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+@keyframes tenmaPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, $tenma-accent 45%, transparent),
+      0 0 12px color-mix(in srgb, $tenma-glow 40%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, $tenma-accent 65%, transparent),
+      0 0 22px color-mix(in srgb, $tenma-glow 70%, transparent);
+  }
+}
+
+@keyframes tenmaFlicker {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tenmaHeroAvatar,
+  .tenmaBreathWarning .tenmaBreathFill {
+    animation: none;
+  }
+}
