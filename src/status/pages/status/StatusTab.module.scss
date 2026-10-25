@@ -821,3 +821,87 @@ $tenma-warning: #d24a4a;
   color: var(--theme-text-muted);
   text-decoration: line-through;
 }
+
+// ===== 沉睡的力量（内层附身身体） =====
+.dormantPreview {
+  display: block;
+  margin-top: 4px;
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dormantSection {
+  margin-top: $spacing-md;
+  border-top: 1px dashed color-mix(in srgb, var(--theme-card-border) 80%, transparent);
+  padding-top: $spacing-sm;
+}
+
+.dormantSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  list-style: revert;
+}
+
+.dormantSummaryHint {
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: var(--theme-text-muted);
+  background: color-mix(in srgb, var(--theme-text-muted) 14%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dormantList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.dormantLayer {
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-card-border) 70%, transparent);
+  border-radius: $border-radius-sm;
+  background: color-mix(in srgb, var(--theme-text-muted) 6%, transparent);
+  filter: grayscale(0.85);
+  opacity: 0.72;
+}
+
+.dormantLayerDead {
+  opacity: 0.5;
+}
+
+.dormantLayerHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.dormantLayerName {
+  color: var(--theme-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dormantLayerDead .dormantLayerName {
+  text-decoration: line-through;
+}
+
+.dormantLayerMeta,
+.dormantLayerEmpty {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dormantLayerBody {
+  pointer-events: none;
+}

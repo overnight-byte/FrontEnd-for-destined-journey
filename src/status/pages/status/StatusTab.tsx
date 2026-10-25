@@ -484,6 +484,25 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   // 天魔化身期间，登神长阶以化身对象为准（编辑模式下仍为本体）
   const tenmaAscension = tenma?.target && !editEnabled ? tenma.target.登神长阶 : null;
   const ascension = tenmaAscension ?? player.登神长阶;
+
+  // 沉睡的力量：非当前外表的附身层（化身时所有附身层皆沉睡），由外到内
+  const dormantLayers =
+    tenma && !editEnabled
+      ? _.reverse(
+          tenma.possessions.filter(
+            layer => !(tenma.mode === 'possess' && layer.name === tenma.targetName),
+          ),
+        ).map(layer => {
+          const layerAscension = data.关系列表?.[layer.name]?.登神长阶;
+          const powerCount =
+            _.size(layerAscension?.法则) +
+            _.size(layerAscension?.权能) +
+            _.size(layerAscension?.要素) +
+            (layerAscension?.神位 ? 1 : 0);
+          return { ...layer, ascension: layerAscension, powerCount };
+        })
+      : [];
+  const dormantPowerLayerCount = dormantLayers.filter(layer => layer.powerCount > 0).length;
   const ascensionParts = [
     Object.keys(ascension?.要素 ?? {}).length
       ? `要素 ${Object.keys(ascension?.要素 ?? {}).length}`
@@ -680,6 +699,11 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 ) : (
                   <span className={styles.ascensionPreviewEmpty}>未开启</span>
                 )}
+                {dormantPowerLayerCount > 0 && (
+                  <span className={styles.dormantPreview}>
+                    另有 {dormantPowerLayerCount} 层沉睡的力量（不可动用）
+                  </span>
+                )}
               </button>
             </section>
 
@@ -856,6 +880,44 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           />
         ) : (
           <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix="主角.登神长阶" />
+        )}
+        {dormantLayers.length > 0 && (
+          <details className={styles.dormantSection}>
+            <summary className={styles.dormantSummary}>
+              沉睡的力量 · {dormantLayers.length} 层
+              <span className={styles.dormantSummaryHint}>不可动用</span>
+            </summary>
+            <div className={styles.dormantList}>
+              {dormantLayers.map(layer => (
+                <div
+                  key={`${layer.layer}-${layer.name}`}
+                  className={`${styles.dormantLayer} ${layer.dead ? styles.dormantLayerDead : ''}`.trim()}
+                >
+                  <div className={styles.dormantLayerHeader}>
+                    <span className={styles.dormantLayerName}>
+                      {layer.name}
+                      {layer.dead && ' †'}
+                    </span>
+                    <span className={styles.dormantLayerMeta}>
+                      第 {layer.layer} 层 · {layer.dead ? '躯体已死' : '意识沉睡'}
+                    </span>
+                  </div>
+                  {layer.powerCount > 0 ? (
+                    <div className={styles.dormantLayerBody}>
+                      <Ascension
+                        data={layer.ascension}
+                        compact
+                        editEnabled={false}
+                        pathPrefix={`关系列表.${layer.name}.登神长阶`}
+                      />
+                    </div>
+                  ) : (
+                    <span className={styles.dormantLayerEmpty}>无登神长阶</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
         )}
       </DetailSheet>
 
