@@ -761,3 +761,21 @@ $tenma-warning: #d24a4a;
     animation: none;
   }
 }
+
+.tenmaInfoValue {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  color: color-mix(in srgb, $tenma-accent 65%, var(--theme-text-primary));
+}
+
+.tenmaInfoSelf {
+  color: var(--theme-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tenmaResource {
+  position: relative;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, $tenma-glow 35%, transparent));
+}

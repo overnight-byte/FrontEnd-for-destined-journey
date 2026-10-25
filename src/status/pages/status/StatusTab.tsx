@@ -301,12 +301,41 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     return field.prefix ? `${field.prefix}${displayValue}` : displayValue;
   };
 
+  /** 天魔化身期间的角色档案：以化身对象为准，并以小字保留本体 */
+  const formatTagLikeValue = (value: unknown) => {
+    if (_.isArray(value)) return value.length > 0 ? value.join(' / ') : '无';
+    return value === undefined || value === null || value === '' ? '无' : String(value);
+  };
+
+  const renderTenmaInfoField = (field: BasicInfoFieldConfig) => {
+    const target = tenma?.target;
+    if (!target) return null;
+    const targetDisplay = formatTagLikeValue(_.get(target, field.key));
+    const selfDisplay = formatDisplayValue(field);
+
+    return (
+      <div key={field.key} className={styles.basicInfoRow}>
+        <span className={styles.basicInfoLabel}>{field.label}</span>
+        <span className={`${styles.basicInfoValue} ${styles.tenmaInfoValue}`}>
+          {targetDisplay}
+          {targetDisplay !== selfDisplay && (
+            <span className={styles.tenmaInfoSelf}>本体：{selfDisplay}</span>
+          )}
+        </span>
+      </div>
+    );
+  };
+
   /**
    * 渲染基础信息字段
    */
   const renderBasicInfoField = (field: BasicInfoFieldConfig) => {
     const value = _.get(player, field.key);
     const path = `主角.${field.key}`;
+
+    if (tenma?.target && !editEnabled) {
+      return renderTenmaInfoField(field);
+    }
 
     // 非编辑模式下始终显示只读值
     if (!editEnabled || !field.editable) {
@@ -337,15 +366,27 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     const max = Math.max(0, base + extra);
 
     if (!editEnabled) {
+      // 天魔化身：若本体资源尚未同步（上限.额外 为 0），暂以化身对象的资源显示
+      const target = tenma?.target;
+      const useTarget = !!target && extra === 0;
+      const shownCurrent = useTarget ? _.get(target, `${field.key}.当前`, 0) : current;
+      const shownMax = useTarget
+        ? Math.max(
+            0,
+            _.get(target, `${field.key}.上限._基础`, 0) + _.get(target, `${field.key}.上限.额外`, 0),
+          )
+        : max;
+
       return (
-        <ResourceBar
-          key={field.type}
-          label={field.label}
-          current={current}
-          max={max}
-          type={field.type}
-          icon={field.icon}
-        />
+        <div key={field.type} className={tenma ? styles.tenmaResource : undefined}>
+          <ResourceBar
+            label={field.label}
+            current={shownCurrent}
+            max={shownMax}
+            type={field.type}
+            icon={field.icon}
+          />
+        </div>
       );
     }
 
@@ -435,7 +476,9 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
     total: effectEntries.length,
   };
 
-  const ascension = player.登神长阶;
+  // 天魔化身期间，登神长阶以化身对象为准（编辑模式下仍为本体）
+  const tenmaAscension = tenma?.target && !editEnabled ? tenma.target.登神长阶 : null;
+  const ascension = tenmaAscension ?? player.登神长阶;
   const ascensionParts = [
     Object.keys(ascension?.要素 ?? {}).length
       ? `要素 ${Object.keys(ascension?.要素 ?? {}).length}`
@@ -583,6 +626,7 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                       style={getIconStyle('game-icons:spiked-halo')}
                     />
                     登神长阶
+                    {tenmaAscension && <span className={styles.tenmaAttrHint}>化身</span>}
                   </span>
                   <i className={`fa-solid fa-chevron-right ${styles.detailEntryChevron}`} />
                 </div>
@@ -625,6 +669,14 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
               </span>
               <div className={styles.basicInfo}>
                 {ProfileInfoFields.map(field => renderBasicInfoField(field))}
+                {tenma?.target && !editEnabled && !_.isEmpty(tenma.target.身份) && (
+                  <div className={styles.basicInfoRow}>
+                    <span className={styles.basicInfoLabel}>身份</span>
+                    <span className={`${styles.basicInfoValue} ${styles.tenmaInfoValue}`}>
+                      {tenma.target.身份.join(' / ')}
+                    </span>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -763,7 +815,15 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
         subtitle={ascensionSummary}
         onClose={() => setActiveDetail(null)}
       >
-        <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix="主角.登神长阶" />
+        {tenmaAscension && tenma ? (
+          <Ascension
+            data={tenmaAscension}
+            editEnabled={false}
+            pathPrefix={`关系列表.${tenma.targetName}.登神长阶`}
+          />
+        ) : (
+          <Ascension data={player.登神长阶} editEnabled={editEnabled} pathPrefix="主角.登神长阶" />
+        )}
       </DetailSheet>
 
       <AvatarActionModal

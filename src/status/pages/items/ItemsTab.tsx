@@ -8,6 +8,7 @@ import {
   getAssetFilterOptions,
   getFilteredAssetEntries,
   getQualityClass,
+  getTenmaState,
   readSessionState,
   writeSessionState,
 } from '../../core/utils';
@@ -65,6 +66,9 @@ type InspectItemState = {
   name: string;
 } | null;
 
+/** 天魔化身时可借用的类别（资产不随化身转移） */
+const TenmaBorrowableCategories: CategoryId[] = ['inventory', 'equipment', 'skills'];
+
 /** 全部筛选项 */
 const ALL_FILTER = '全部';
 
@@ -95,16 +99,43 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const [isCompactLayout, setIsCompactLayout] = useState(false);
   const [hiddenGroupExpanded, setHiddenGroupExpanded] = useState(false);
   const player = data.主角;
+  const tenma = useMemo(
+    () => getTenmaState(player.状态效果, data.关系列表),
+    [player.状态效果, data.关系列表],
+  );
 
   /** 获取当前类别配置 */
   const getCategoryConfig = (category: CategoryId) => {
     return ItemCategories.find(c => c.id === category)!;
   };
 
+  /** 天魔化身：从化身对象处借用的物品（与本体同名者以本体为准） */
+  const getBorrowedData = (category: CategoryId) => {
+    if (!tenma?.target || !TenmaBorrowableCategories.includes(category)) return {};
+    const config = getCategoryConfig(category);
+    const own = getAssetCollectionSource(player, config.label);
+    const borrowed = getAssetCollectionSource(tenma.target, config.label);
+    return _.omitBy(borrowed, (_item, name) => _.has(own, name));
+  };
+
+  const isBorrowedItem = (category: CategoryId, name: string) =>
+    _.has(getBorrowedData(category), name);
+
+  /** 获取条目的变量路径（借用条目指向化身对象，仅供只读展示） */
+  const getItemPathPrefix = (category: CategoryId, name: string) => {
+    const config = getCategoryConfig(category);
+    if (tenma && isBorrowedItem(category, name)) {
+      return `关系列表.${tenma.targetName}.${config.label}.${name}`;
+    }
+    return `${config.pathPrefix}.${name}`;
+  };
+
   /** 获取当前类别的数据源 */
   const getCategoryData = (category: CategoryId) => {
     const config = getCategoryConfig(category);
-    return getAssetCollectionSource(player, config.label);
+    const own = getAssetCollectionSource(player, config.label);
+    const borrowed = getBorrowedData(category);
+    return _.isEmpty(borrowed) ? own : { ...borrowed, ...own };
   };
 
   /** 获取当前类别的筛选字段 */
@@ -116,7 +147,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const activeCategoryConfig = getCategoryConfig(activeCategory);
   const activeCategoryItems = useMemo(
     () => getCategoryData(activeCategory),
-    [activeCategory, player.技能, player.装备, player.背包, player.资产],
+    [activeCategory, player.技能, player.装备, player.背包, player.资产, tenma],
   );
 
   const inspectCategoryConfig = inspectItem ? getCategoryConfig(inspectItem.categoryId) : null;
@@ -307,13 +338,24 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       return <EmptyHint className={styles.emptyHint} text="选择一件持有物查看详情" />;
     }
 
+    const borrowed = isBorrowedItem(itemState.categoryId, itemState.name);
+
     return (
       <ItemDetail
         name={itemState.name}
         data={itemData}
-        titleSuffix={getTitleSuffix(config, itemData)}
-        editEnabled={editEnabled}
-        pathPrefix={`${config.pathPrefix}.${itemState.name}`}
+        titleSuffix={
+          <>
+            {borrowed && tenma && (
+              <span className={styles.tenmaBorrowBadge} title={`借用自 ${tenma.targetName}`}>
+                借用
+              </span>
+            )}
+            {getTitleSuffix(config, itemData)}
+          </>
+        }
+        editEnabled={editEnabled && !borrowed}
+        pathPrefix={getItemPathPrefix(itemState.categoryId, itemState.name)}
         itemCategory={config.itemCategory}
         displayMode="modal-detail"
       />
@@ -327,6 +369,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
     itemData: ItemData | undefined,
   ) => {
     if (!itemState || !config || !itemData || config.itemCategory === 'equipment') return null;
+    if (isBorrowedItem(itemState.categoryId, itemState.name)) return null;
 
     const isHidden = !!itemData._隐藏;
 
@@ -399,13 +442,14 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       const isSelected = selectedItem?.categoryId === activeCategory && selectedItem.name === name;
       const qualityClass = getQualityClass(item.品质, styles);
       const itemTags = getItemTags(item);
+      const borrowed = isBorrowedItem(activeCategory, name);
 
       return (
         <div
           key={name}
           role="button"
           tabIndex={0}
-          className={`${styles.itemRow} ${isSelected ? styles.isSelected : ''}`}
+          className={`${styles.itemRow} ${isSelected ? styles.isSelected : ''} ${borrowed ? styles.tenmaBorrowedRow : ''}`}
           onClick={() => handleSelectItem(name)}
           onKeyDown={event => handleItemRowKeyDown(event, name)}
         >
@@ -415,8 +459,16 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
               <span className={`${styles.itemRowName} ${qualityClass}`.trim()}>{name}</span>
               <span className={styles.itemRowType}>{getItemTypeLabel(item)}</span>
             </span>
-            {itemTags.length > 0 ? (
+            {itemTags.length > 0 || borrowed ? (
               <span className={styles.itemRowTags}>
+                {borrowed && tenma && (
+                  <span
+                    className={`${styles.itemRowTag} ${styles.tenmaBorrowTag}`}
+                    title={`借用自 ${tenma.targetName}`}
+                  >
+                    借用·{tenma.targetName}
+                  </span>
+                )}
                 {itemTags.map((tag, idx) => (
                   <span key={`${tag}-${idx}`} className={styles.itemRowTag}>
                     {tag}
@@ -429,7 +481,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
             <span className={styles.itemRowSuffix}>
               {getTitleSuffix(activeCategoryConfig, item)}
             </span>
-            {editEnabled && activeCategoryConfig.itemCategory !== 'equipment' && (
+            {editEnabled && !borrowed && activeCategoryConfig.itemCategory !== 'equipment' && (
               <button
                 type="button"
                 className={`${styles.itemHideButton} ${item._隐藏 ? styles.isHidden : ''}`}
@@ -442,7 +494,7 @@ const ItemsTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <i className={`fa-solid ${item._隐藏 ? 'fa-circle-plus' : 'fa-circle-minus'}`} />
               </button>
             )}
-            {editEnabled && (
+            {editEnabled && !borrowed && (
               <button
                 type="button"
                 className={styles.itemDeleteButton}
