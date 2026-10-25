@@ -373,7 +373,8 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
       const shownMax = useTarget
         ? Math.max(
             0,
-            _.get(target, `${field.key}.上限._基础`, 0) + _.get(target, `${field.key}.上限.额外`, 0),
+            _.get(target, `${field.key}.上限._基础`, 0) +
+              _.get(target, `${field.key}.上限.额外`, 0),
           )
         : max;
 
